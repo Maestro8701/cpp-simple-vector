@@ -100,7 +100,7 @@ public:
     }
 
     bool IsEmpty() const noexcept {
-        return  0 ==_size;
+        return  _size == 0;
     }
 
     Type& operator[](size_t index) noexcept {
