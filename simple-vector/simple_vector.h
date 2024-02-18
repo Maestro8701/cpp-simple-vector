@@ -40,14 +40,11 @@ public:
         std::move(init.begin(), init.end(), begin());
     }
 
-    SimpleVector(const SimpleVector& other) {
-        ArrayPtr<Type> tmp(other._size);
-        std::copy(other.begin(), other.end(), tmp.Get());
-
-        _items.swap(tmp);
-        _size = other._size;
-        _capacity = other._capacity;
-    }
+    SimpleVector(const SimpleVector& other) 
+    : _items(other._size), _size(other._size), _capacity(other._capacity) 
+{ 
+    std::copy(other.begin(), other.end(), _items.Get()); 
+}
 
     SimpleVector(ReserveProxyObj object) :_items(object.capasity), _capacity(object.capasity)
     {
@@ -66,7 +63,7 @@ public:
     SimpleVector(SimpleVector&& other)
     {
         _items = std::move(other._items);
-        _size = other._size;
+        _size = std::exchange(other._size, _size);
         _capacity = other._capacity;
         other._size = 0;
         other._capacity = 0;
@@ -171,6 +168,7 @@ public:
         ++_size;
         _capacity = new_capacity;
     }
+
     void PushBack(Type&& item) {
         if (_size < _capacity)
         {
@@ -236,7 +234,7 @@ public:
     }
 
     void PopBack() noexcept {
-        if (_size == 0) return;
+        assert(_size > 0);
         --_size;
     }
 
@@ -244,6 +242,7 @@ public:
         assert(pos >= begin() && pos <= end());
         auto dist = std::distance(cbegin(), pos);
         std::move(begin()+dist+1,end(),begin()+dist);
+        assert(_size > 0)
         --_size;
         return _items.Get() + dist;
     }
@@ -298,7 +297,8 @@ private:
 
 template <typename Type>
 inline bool operator==(const SimpleVector<Type>& lhs, const SimpleVector<Type>& rhs) {
-    if (lhs.GetSize() != rhs.GetSize()) return false;
+    if (lhs.GetSize() != rhs.GetSize()) {
+        return false; }
 
     return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin());
 }
